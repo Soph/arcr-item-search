@@ -10,6 +10,7 @@
   let loading = true;
   let error: string | null = null;
   let searchFocused = false;
+  let searchInput: HTMLInputElement;
 
   // Reactive filtered items based on search query
   $: filteredItems = filterItemsByName(items, searchQuery);
@@ -20,6 +21,11 @@
       items = data.items;
       referenceCounts = buildReferenceCount(data.hideoutModules, data.projects);
       loading = false;
+
+      // Only autofocus on desktop (screen width > 600px)
+      if (window.innerWidth > 600 && searchInput) {
+        searchInput.focus();
+      }
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to load data';
       loading = false;
@@ -52,9 +58,9 @@
       <input
         type="text"
         bind:value={searchQuery}
+        bind:this={searchInput}
         placeholder="Search items by name..."
         class="search-input"
-        autofocus
         on:focus={() => searchFocused = true}
         on:blur={() => searchFocused = false}
       />

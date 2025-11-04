@@ -115,36 +115,38 @@
   :global(html) {
     width: 100%;
     overflow-x: hidden;
+    box-sizing: border-box;
   }
 
   :global(body) {
     margin: 0;
     padding: 0;
-    width: 100%;
-    min-width: 100vw;
+    width: 100vw;
     overflow-x: hidden;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
       'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
       sans-serif;
     background-color: #0a0a0a;
     color: #e0e0e0;
+    box-sizing: border-box;
   }
 
   :global(#app) {
     width: 100%;
-    min-width: 100vw;
     overflow-x: hidden;
+    box-sizing: border-box;
+  }
+
+  :global(*) {
+    box-sizing: border-box;
   }
 
   main {
     width: 100%;
-    min-width: 100%;
     max-width: 900px;
     margin: 0 auto;
     padding: 2rem 1rem;
     min-height: 100vh;
-    box-sizing: border-box;
-    overflow-x: hidden;
   }
 
   header {
@@ -199,8 +201,6 @@
     background-color: #0a0a0a;
     padding: 1rem 0;
     z-index: 10;
-    width: 100%;
-    box-sizing: border-box;
   }
 
   .search-input {
@@ -211,7 +211,6 @@
     border-radius: 8px;
     background-color: #1a1a1a;
     color: #e0e0e0;
-    box-sizing: border-box;
     transition: border-color 0.2s;
   }
 
@@ -228,14 +227,10 @@
     color: #888;
     margin-bottom: 1rem;
     font-size: 0.9rem;
-    width: 100%;
-    box-sizing: border-box;
   }
 
   .results-container {
     min-height: 200px;
-    width: 100%;
-    box-sizing: border-box;
   }
 
   .empty-state {
@@ -248,19 +243,15 @@
     list-style: none;
     padding: 0;
     margin: 0;
-    width: 100%;
-    box-sizing: border-box;
   }
 
   .result-item {
-    width: 100%;
     padding: 1rem;
     margin-bottom: 0.5rem;
     background-color: #1a1a1a;
     border: 1px solid #333;
     border-radius: 8px;
     transition: all 0.2s;
-    box-sizing: border-box;
   }
 
   .result-item:hover {

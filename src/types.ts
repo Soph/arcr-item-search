@@ -54,3 +54,8 @@ export interface ItemWithCount {
   item: Item;
   referenceCount: number;
 }
+
+export interface ReferenceDetails {
+  count: number;
+  sources: string[];
+}

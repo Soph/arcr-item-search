@@ -1,12 +1,12 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { Item } from './types';
+  import type { Item, ReferenceDetails } from './types';
   import { loadAllData } from './lib/dataLoader';
   import { buildReferenceCount, filterItemsByName } from './lib/searchUtils';
 
   let searchQuery = '';
   let items: Item[] = [];
-  let referenceCounts = new Map<string, number>();
+  let referenceCounts = new Map<string, ReferenceDetails>();
   let loading = true;
   let error: string | null = null;
 
@@ -25,8 +25,8 @@
     }
   });
 
-  function getReferenceCount(itemId: string): number {
-    return referenceCounts.get(itemId) || 0;
+  function getReferenceDetails(itemId: string): ReferenceDetails {
+    return referenceCounts.get(itemId) || { count: 0, sources: [] };
   }
 </script>
 
@@ -83,9 +83,23 @@
                 <span class="item-type">{item.type}</span>
               </div>
               <div class="item-meta">
-                <span class="reference-count" class:has-references={getReferenceCount(item.id) > 0}>
-                  Referenced: {getReferenceCount(item.id)}×
-                </span>
+                {#if getReferenceDetails(item.id).count > 0}
+                  <span
+                    class="reference-count has-references"
+                    title={getReferenceDetails(item.id).sources.join('\n')}
+                  >
+                    Referenced: {getReferenceDetails(item.id).count}×
+                    <span class="tooltip">
+                      {#each getReferenceDetails(item.id).sources as source}
+                        <div class="tooltip-item">{source}</div>
+                      {/each}
+                    </span>
+                  </span>
+                {:else}
+                  <span class="reference-count">
+                    Referenced: 0×
+                  </span>
+                {/if}
               </div>
             </li>
           {/each}
@@ -259,12 +273,51 @@
     color: #888;
     font-weight: 500;
     white-space: nowrap;
+    position: relative;
+    cursor: default;
   }
 
   .reference-count.has-references {
     background-color: #667eea22;
     color: #667eea;
     border: 1px solid #667eea44;
+    cursor: help;
+  }
+
+  .tooltip {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    margin-bottom: 8px;
+    background-color: #1a1a1a;
+    border: 1px solid #667eea;
+    border-radius: 6px;
+    padding: 0.75rem;
+    min-width: 250px;
+    max-width: 350px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    transition: opacity 0.2s, visibility 0.2s;
+    pointer-events: none;
+  }
+
+  .reference-count.has-references:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .tooltip-item {
+    color: #e0e0e0;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    padding: 0.25rem 0;
+    white-space: nowrap;
+  }
+
+  .tooltip-item:not(:last-child) {
+    border-bottom: 1px solid #333;
   }
 
   @media (max-width: 600px) {

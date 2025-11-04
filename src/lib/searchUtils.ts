@@ -1,35 +1,45 @@
-import type { HideoutModule, Project } from '../types';
+import type { HideoutModule, Project, ReferenceDetails } from '../types';
 
 /**
- * Builds a map of item IDs to their reference count across hideout modules and projects
+ * Builds a map of item IDs to their reference details (count and source names)
  */
 export function buildReferenceCount(
   hideoutModules: HideoutModule[],
   projects: Project[]
-): Map<string, number> {
-  const referenceCounts = new Map<string, number>();
+): Map<string, ReferenceDetails> {
+  const referenceMap = new Map<string, ReferenceDetails>();
 
-  // Count references in hideout modules
+  // Track references in hideout modules
   for (const module of hideoutModules) {
     for (const level of module.levels) {
       for (const requirement of level.requirementItemIds) {
-        const currentCount = referenceCounts.get(requirement.itemId) || 0;
-        referenceCounts.set(requirement.itemId, currentCount + 1);
+        const current = referenceMap.get(requirement.itemId) || { count: 0, sources: [] };
+        const sourceName = `${module.name} (Level ${level.level})`;
+
+        referenceMap.set(requirement.itemId, {
+          count: current.count + 1,
+          sources: [...current.sources, sourceName]
+        });
       }
     }
   }
 
-  // Count references in projects
+  // Track references in projects
   for (const project of projects) {
     for (const phase of project.phases) {
       for (const requirement of phase.requirementItemIds) {
-        const currentCount = referenceCounts.get(requirement.itemId) || 0;
-        referenceCounts.set(requirement.itemId, currentCount + 1);
+        const current = referenceMap.get(requirement.itemId) || { count: 0, sources: [] };
+        const sourceName = `${project.name} (${phase.name})`;
+
+        referenceMap.set(requirement.itemId, {
+          count: current.count + 1,
+          sources: [...current.sources, sourceName]
+        });
       }
     }
   }
 
-  return referenceCounts;
+  return referenceMap;
 }
 
 /**

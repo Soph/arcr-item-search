@@ -63,15 +63,78 @@ export function buildReferenceCount(
 }
 
 /**
- * Filters items by name (case-insensitive)
+ * Finds item IDs required by modules/projects matching the search query
  */
-export function filterItemsByName(items: any[], searchQuery: string) {
+export function findItemsRequiredBySource(
+  hideoutModules: HideoutModule[],
+  projects: Project[],
+  searchQuery: string
+): Set<string> {
+  const lowerQuery = searchQuery.toLowerCase();
+  const itemIds = new Set<string>();
+
+  // Search hideout modules
+  for (const module of hideoutModules) {
+    if (module.name.toLowerCase().includes(lowerQuery)) {
+      for (const level of module.levels) {
+        for (const requirement of level.requirementItemIds) {
+          itemIds.add(requirement.itemId);
+        }
+      }
+    }
+  }
+
+  // Search projects
+  for (const project of projects) {
+    if (project.name.toLowerCase().includes(lowerQuery)) {
+      for (const phase of project.phases) {
+        for (const requirement of phase.requirementItemIds) {
+          itemIds.add(requirement.itemId);
+        }
+      }
+    }
+  }
+
+  return itemIds;
+}
+
+/**
+ * Filters items by name or by module/project requirements (case-insensitive)
+ * Items matching by name appear first, then items matching by module/project
+ */
+export function filterItemsByName(
+  items: any[],
+  searchQuery: string,
+  hideoutModules?: HideoutModule[],
+  projects?: Project[]
+) {
   if (!searchQuery.trim()) {
     return items;
   }
 
   const lowerQuery = searchQuery.toLowerCase();
-  return items.filter(item =>
-    item.name.toLowerCase().includes(lowerQuery)
-  );
+
+  // First, check if search matches any module/project
+  let requiredItemIds = new Set<string>();
+  if (hideoutModules && projects) {
+    requiredItemIds = findItemsRequiredBySource(hideoutModules, projects, searchQuery);
+  }
+
+  // Filter and categorize items
+  const nameMatches: any[] = [];
+  const sourceMatches: any[] = [];
+
+  items.forEach(item => {
+    const matchesName = item.name.toLowerCase().includes(lowerQuery);
+    const isRequiredBySource = requiredItemIds.has(item.id);
+
+    if (matchesName) {
+      nameMatches.push(item);
+    } else if (isRequiredBySource) {
+      sourceMatches.push(item);
+    }
+  });
+
+  // Return name matches first, then source matches
+  return [...nameMatches, ...sourceMatches];
 }

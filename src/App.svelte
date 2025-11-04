@@ -1,11 +1,13 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { Item, ReferenceDetails } from './types';
+  import type { Item, ReferenceDetails, HideoutModule, Project } from './types';
   import { loadAllData } from './lib/dataLoader';
   import { buildReferenceCount, filterItemsByName } from './lib/searchUtils';
 
   let searchQuery = '';
   let items: Item[] = [];
+  let hideoutModules: HideoutModule[] = [];
+  let projects: Project[] = [];
   let referenceCounts = new Map<string, ReferenceDetails>();
   let loading = true;
   let error: string | null = null;
@@ -13,12 +15,14 @@
   let searchInput: HTMLInputElement;
 
   // Reactive filtered items based on search query
-  $: filteredItems = filterItemsByName(items, searchQuery);
+  $: filteredItems = filterItemsByName(items, searchQuery, hideoutModules, projects);
 
   onMount(async () => {
     try {
       const data = await loadAllData();
       items = data.items;
+      hideoutModules = data.hideoutModules;
+      projects = data.projects;
       referenceCounts = buildReferenceCount(data.hideoutModules, data.projects);
       loading = false;
 
@@ -34,6 +38,11 @@
 
   function getReferenceDetails(itemId: string): ReferenceDetails {
     return referenceCounts.get(itemId) || { count: 0, sources: [], totalQuantity: 0, quantityBySource: {} };
+  }
+
+  function sourceMatchesQuery(source: string): boolean {
+    if (!searchQuery.trim()) return false;
+    return source.toLowerCase().includes(searchQuery.toLowerCase());
   }
 </script>
 
@@ -107,7 +116,7 @@
                 <div class="references">
                   {#each getReferenceDetails(item.id).sources as source}
                     <div class="reference-item">
-                      <span class="source-name">{source}</span>
+                      <span class="source-name" class:matched={sourceMatchesQuery(source)}>{source}</span>
                       <span class="source-quantity">×{getReferenceDetails(item.id).quantityBySource[source]}</span>
                     </div>
                   {/each}
@@ -364,6 +373,11 @@
     content: "→ ";
     color: #667eea;
     margin-right: 0.25rem;
+  }
+
+  .source-name.matched {
+    font-weight: 700;
+    color: #e0e0e0;
   }
 
   .source-quantity {

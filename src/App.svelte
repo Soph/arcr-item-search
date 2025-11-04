@@ -98,7 +98,16 @@
             <li class="result-item">
               <div class="item-header">
                 <div class="item-info">
-                  <span class="item-name">{item.name}</span>
+                  <div class="item-name-row">
+                    <span class="item-name">{item.name}</span>
+                    <a href="https://arctracker.io/items/{item.id}" target="_blank" rel="noopener noreferrer" class="external-link" title="View on ArcTracker">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                      </svg>
+                    </a>
+                  </div>
                   <span class="item-type">{item.type}</span>
                 </div>
                 <div class="reference-stats">
@@ -129,9 +138,14 @@
     </div>
 
     <footer>
-      <a href="https://github.com/Soph/arcr-item-search" target="_blank" rel="noopener noreferrer">
-        View on GitHub
-      </a>
+      <div>
+        <a href="https://github.com/Soph/arcr-item-search" target="_blank" rel="noopener noreferrer">
+          View on GitHub
+        </a>
+      </div>
+      <div class="attribution">
+        <a target="_blank" href="https://icons8.com/icon/82787/external-link">External Link</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
+      </div>
     </footer>
   {/if}
 </main>
@@ -300,11 +314,33 @@
     align-items: flex-start;
   }
 
+  .item-name-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
   .item-name {
     font-size: 1.1rem;
     font-weight: 500;
     color: #e0e0e0;
     text-align: left;
+  }
+
+  .external-link {
+    display: inline-flex;
+    align-items: center;
+    color: #888;
+    transition: color 0.2s;
+    flex-shrink: 0;
+  }
+
+  .external-link:hover {
+    color: #667eea;
+  }
+
+  .external-link svg {
+    display: block;
   }
 
   .item-type {
@@ -391,6 +427,9 @@
     padding-top: 2rem;
     border-top: 1px solid #333;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
   }
 
   footer a {
@@ -402,6 +441,15 @@
 
   footer a:hover {
     color: #667eea;
+  }
+
+  .attribution {
+    font-size: 0.75rem;
+    color: #666;
+  }
+
+  .attribution a {
+    font-size: 0.75rem;
   }
 
   @media (max-width: 600px) {

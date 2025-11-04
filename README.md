@@ -1,6 +1,6 @@
 # Arc Raiders Item Search
 
-A web application for searching Arc Raiders items and viewing their usage across hideout modules and projects.
+A web application for searching Arc Raiders items and viewing their usage across hideout modules and projects. It's based on JSON files provided in this repository: https://github.com/RaidTheory/arcraiders-data
 
 ## Features
 

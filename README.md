@@ -2,6 +2,8 @@
 
 A web application for searching Arc Raiders items and viewing their usage across hideout modules and projects. It's based on JSON files provided in this repository: https://github.com/RaidTheory/arcraiders-data
 
+Currently deployed at: https://soph.github.io/arcr-item-search/
+
 ## Features
 
 - 🔍 Real-time search by item name

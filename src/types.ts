@@ -77,8 +77,8 @@ export interface Quest {
   description: LocalizedString;
   trader: string;
   objectives: LocalizedString[];
-  requiredItemIds: RequirementItem[];
-  rewardItemIds: RequirementItem[];
+  requiredItemIds?: RequirementItem[];
+  rewardItemIds?: RequirementItem[];
   xp: number;
   previousQuestIds: string[];
   nextQuestIds: string[];

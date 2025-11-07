@@ -62,6 +62,8 @@ export function buildReferenceCount(
 
   // Track quest requirements
   for (const quest of quests) {
+    if (!quest.requiredItemIds) continue;
+
     for (const requirement of quest.requiredItemIds) {
       const current = referenceMap.get(requirement.itemId) || {
         count: 0,
@@ -122,7 +124,7 @@ export function findItemsRequiredBySource(
 
   // Search quests (for quest requirements)
   for (const quest of quests) {
-    if (quest.name.en.toLowerCase().includes(lowerQuery)) {
+    if (quest.name.en.toLowerCase().includes(lowerQuery) && quest.requiredItemIds) {
       for (const requirement of quest.requiredItemIds) {
         itemIds.add(requirement.itemId);
       }

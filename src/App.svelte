@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { Item, ReferenceDetails, HideoutModule, Project } from './types';
+  import type { Item, ReferenceDetails, HideoutModule, Project, Quest } from './types';
   import { loadAllData } from './lib/dataLoader';
   import { buildReferenceCount, filterItemsByName } from './lib/searchUtils';
 
@@ -8,6 +8,7 @@
   let items: Item[] = [];
   let hideoutModules: HideoutModule[] = [];
   let projects: Project[] = [];
+  let quests: Quest[] = [];
   let referenceCounts = new Map<string, ReferenceDetails>();
   let loading = true;
   let error: string | null = null;
@@ -15,7 +16,7 @@
   let searchInput: HTMLInputElement;
 
   // Reactive filtered items based on search query
-  $: filteredItems = filterItemsByName(items, searchQuery, hideoutModules, projects);
+  $: filteredItems = filterItemsByName(items, searchQuery, hideoutModules, projects, quests);
 
   onMount(async () => {
     try {
@@ -23,7 +24,8 @@
       items = data.items;
       hideoutModules = data.hideoutModules;
       projects = data.projects;
-      referenceCounts = buildReferenceCount(data.hideoutModules, data.projects);
+      quests = data.quests;
+      referenceCounts = buildReferenceCount(data.hideoutModules, data.projects, data.quests);
       loading = false;
 
       // Only autofocus on desktop (screen width > 600px)

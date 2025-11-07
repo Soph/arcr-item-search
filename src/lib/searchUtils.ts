@@ -1,11 +1,12 @@
-import type { HideoutModule, Project, ReferenceDetails } from '../types';
+import type { HideoutModule, Project, Quest, ReferenceDetails } from '../types';
 
 /**
  * Builds a map of item IDs to their reference details (count and source names)
  */
 export function buildReferenceCount(
   hideoutModules: HideoutModule[],
-  projects: Project[]
+  projects: Project[],
+  quests: Quest[]
 ): Map<string, ReferenceDetails> {
   const referenceMap = new Map<string, ReferenceDetails>();
 
@@ -59,15 +60,39 @@ export function buildReferenceCount(
     }
   }
 
+  // Track quest rewards
+  for (const quest of quests) {
+    for (const reward of quest.rewardItemIds) {
+      const current = referenceMap.get(reward.itemId) || {
+        count: 0,
+        sources: [],
+        totalQuantity: 0,
+        quantityBySource: {}
+      };
+      const sourceName = `${quest.name.en} (Quest Reward)`;
+
+      referenceMap.set(reward.itemId, {
+        count: current.count + 1,
+        sources: [...current.sources, sourceName],
+        totalQuantity: current.totalQuantity + reward.quantity,
+        quantityBySource: {
+          ...current.quantityBySource,
+          [sourceName]: reward.quantity
+        }
+      });
+    }
+  }
+
   return referenceMap;
 }
 
 /**
- * Finds item IDs required by modules/projects matching the search query
+ * Finds item IDs required by modules/projects/quests matching the search query
  */
 export function findItemsRequiredBySource(
   hideoutModules: HideoutModule[],
   projects: Project[],
+  quests: Quest[],
   searchQuery: string
 ): Set<string> {
   const lowerQuery = searchQuery.toLowerCase();
@@ -95,18 +120,28 @@ export function findItemsRequiredBySource(
     }
   }
 
+  // Search quests (for quest rewards)
+  for (const quest of quests) {
+    if (quest.name.en.toLowerCase().includes(lowerQuery)) {
+      for (const reward of quest.rewardItemIds) {
+        itemIds.add(reward.itemId);
+      }
+    }
+  }
+
   return itemIds;
 }
 
 /**
- * Filters items by name or by module/project requirements (case-insensitive)
- * Items matching by name appear first, then items matching by module/project
+ * Filters items by name or by module/project/quest requirements (case-insensitive)
+ * Items matching by name appear first, then items matching by module/project/quest
  */
 export function filterItemsByName(
   items: any[],
   searchQuery: string,
   hideoutModules?: HideoutModule[],
-  projects?: Project[]
+  projects?: Project[],
+  quests?: Quest[]
 ) {
   if (!searchQuery.trim()) {
     return items;
@@ -114,10 +149,10 @@ export function filterItemsByName(
 
   const lowerQuery = searchQuery.toLowerCase();
 
-  // First, check if search matches any module/project
+  // First, check if search matches any module/project/quest
   let requiredItemIds = new Set<string>();
-  if (hideoutModules && projects) {
-    requiredItemIds = findItemsRequiredBySource(hideoutModules, projects, searchQuery);
+  if (hideoutModules && projects && quests) {
+    requiredItemIds = findItemsRequiredBySource(hideoutModules, projects, quests, searchQuery);
   }
 
   // Filter and categorize items

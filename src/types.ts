@@ -71,6 +71,19 @@ export interface Project {
   phases: ProjectPhase[];
 }
 
+export interface Quest {
+  id: string;
+  name: LocalizedString;
+  description: LocalizedString;
+  trader: string;
+  objectives: LocalizedString[];
+  rewardItemIds: RequirementItem[];
+  xp: number;
+  previousQuestIds: string[];
+  nextQuestIds: string[];
+  updatedAt?: string;
+}
+
 export interface ItemWithCount {
   item: Item;
   referenceCount: number;

@@ -60,24 +60,24 @@ export function buildReferenceCount(
     }
   }
 
-  // Track quest rewards
+  // Track quest requirements
   for (const quest of quests) {
-    for (const reward of quest.rewardItemIds) {
-      const current = referenceMap.get(reward.itemId) || {
+    for (const requirement of quest.requiredItemIds) {
+      const current = referenceMap.get(requirement.itemId) || {
         count: 0,
         sources: [],
         totalQuantity: 0,
         quantityBySource: {}
       };
-      const sourceName = `${quest.name.en} (Quest Reward)`;
+      const sourceName = `${quest.name.en} (Quest)`;
 
-      referenceMap.set(reward.itemId, {
+      referenceMap.set(requirement.itemId, {
         count: current.count + 1,
         sources: [...current.sources, sourceName],
-        totalQuantity: current.totalQuantity + reward.quantity,
+        totalQuantity: current.totalQuantity + requirement.quantity,
         quantityBySource: {
           ...current.quantityBySource,
-          [sourceName]: reward.quantity
+          [sourceName]: requirement.quantity
         }
       });
     }
@@ -120,11 +120,11 @@ export function findItemsRequiredBySource(
     }
   }
 
-  // Search quests (for quest rewards)
+  // Search quests (for quest requirements)
   for (const quest of quests) {
     if (quest.name.en.toLowerCase().includes(lowerQuery)) {
-      for (const reward of quest.rewardItemIds) {
-        itemIds.add(reward.itemId);
+      for (const requirement of quest.requiredItemIds) {
+        itemIds.add(requirement.itemId);
       }
     }
   }

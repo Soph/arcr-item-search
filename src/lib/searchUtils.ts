@@ -125,7 +125,7 @@ export function filterItemsByName(
   const sourceMatches: any[] = [];
 
   items.forEach(item => {
-    const matchesName = item.name.toLowerCase().includes(lowerQuery);
+    const matchesName = item.name.en.toLowerCase().includes(lowerQuery);
     const isRequiredBySource = requiredItemIds.has(item.id);
 
     if (matchesName) {

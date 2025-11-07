@@ -1,14 +1,35 @@
+export interface LocalizedString {
+  en: string;
+  de?: string;
+  fr?: string;
+  es?: string;
+  pt?: string;
+  pl?: string;
+  no?: string;
+  da?: string;
+  it?: string;
+  ru?: string;
+  ja?: string;
+  "zh-TW"?: string;
+  uk?: string;
+  "zh-CN"?: string;
+  kr?: string;
+  tr?: string;
+  hr?: string;
+  sr?: string;
+}
+
 export interface Item {
   id: string;
-  name: string;
-  description: string;
+  name: LocalizedString;
+  description: LocalizedString;
   type: string;
   rarity: string;
   value: number;
   weightKg: number;
   stackSize: number;
   imageFilename: string;
-  updatedAt: string;
+  updatedAt?: string;
   recyclesInto?: Record<string, number>;
   salvagesInto?: Record<string, number>;
   effects?: Record<string, any>;

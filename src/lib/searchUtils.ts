@@ -19,7 +19,7 @@ export function buildReferenceCount(
           totalQuantity: 0, 
           quantityBySource: {} 
         };
-        const sourceName = `${module.name} (Level ${level.level})`;
+        const sourceName = `${module.name.en} (Level ${level.level})`;
 
         referenceMap.set(requirement.itemId, {
           count: current.count + 1,
@@ -44,7 +44,7 @@ export function buildReferenceCount(
           totalQuantity: 0, 
           quantityBySource: {} 
         };
-        const sourceName = `${project.name} (${phase.name})`;
+        const sourceName = `${project.name.en} (${phase.name})`;
 
         referenceMap.set(requirement.itemId, {
           count: current.count + 1,
@@ -75,7 +75,7 @@ export function findItemsRequiredBySource(
 
   // Search hideout modules
   for (const module of hideoutModules) {
-    if (module.name.toLowerCase().includes(lowerQuery)) {
+    if (module.name.en.toLowerCase().includes(lowerQuery)) {
       for (const level of module.levels) {
         for (const requirement of level.requirementItemIds) {
           itemIds.add(requirement.itemId);
@@ -86,7 +86,7 @@ export function findItemsRequiredBySource(
 
   // Search projects
   for (const project of projects) {
-    if (project.name.toLowerCase().includes(lowerQuery)) {
+    if (project.name.en.toLowerCase().includes(lowerQuery)) {
       for (const phase of project.phases) {
         for (const requirement of phase.requirementItemIds) {
           itemIds.add(requirement.itemId);

@@ -51,7 +51,7 @@ export interface HideoutModuleLevel {
 
 export interface HideoutModule {
   id: string;
-  name: string;
+  name: LocalizedString;
   maxLevel: number;
   levels: HideoutModuleLevel[];
 }
@@ -66,8 +66,8 @@ export interface ProjectPhase {
 
 export interface Project {
   id: string;
-  name: string;
-  description: string;
+  name: LocalizedString;
+  description: LocalizedString;
   phases: ProjectPhase[];
 }
 

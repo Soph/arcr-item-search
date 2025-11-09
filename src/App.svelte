@@ -36,7 +36,7 @@
   let searchFocused = $state(false);
 
   // Provide searchQuery via context to avoid prop drilling
-  setContext('searchQuery', () => searchQuery);
+  setContext("searchQuery", () => searchQuery);
 
   // Filter state
   let selectedRarities = $state<string[]>([]);
@@ -46,13 +46,7 @@
 
   // Reactive filtered items based on search query and filters (no debounce for now)
   let searchResults = $derived(
-    filterItemsByName(
-      items,
-      searchQuery,
-      hideoutModules,
-      projects,
-      quests
-    )
+    filterItemsByName(items, searchQuery, hideoutModules, projects, quests)
   );
   let filteredItems = $derived(
     applyFilters(searchResults, {
@@ -123,7 +117,7 @@
       class:lg:text-3xl={searchFocused}
       class:mb-0={searchFocused}
     >
-      Arc Raiders Item Search
+      Arc Raiders Item Search v2
     </h1>
     <p
       class="text-zinc-500 text-base md:text-lg transition-[opacity,height] duration-200 ease-out"
@@ -163,7 +157,7 @@
 
       <div class="min-h-[200px]">
         {#if filteredItems.length === 0}
-          <EmptyState searchQuery={searchQuery} />
+          <EmptyState {searchQuery} />
         {:else}
           <ul class="list-none p-0 m-0">
             {#each filteredItems as item (item.id)}
@@ -193,13 +187,15 @@
           <a
             target="_blank"
             href="https://icons8.com/icon/82787/external-link"
-            class="hover:text-zinc-400 active:text-zinc-300 transition-colors">External Link</a
+            class="hover:text-zinc-400 active:text-zinc-300 transition-colors"
+            >External Link</a
           >
           icon by
           <a
             target="_blank"
             href="https://icons8.com"
-            class="hover:text-zinc-400 active:text-zinc-300 transition-colors">Icons8</a
+            class="hover:text-zinc-400 active:text-zinc-300 transition-colors"
+            >Icons8</a
           >
         </div>
       </footer>

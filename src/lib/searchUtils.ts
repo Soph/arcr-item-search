@@ -1,4 +1,15 @@
-import type { HideoutModule, Project, Quest, ReferenceDetails } from '../types';
+import type { HideoutModule, Item, Project, Quest, ReferenceDetails } from '../types';
+import Fuse from 'fuse.js';
+
+// Cache Fuse instances to avoid recreating them on every search
+let cachedItemsFuse: Fuse<Item> | null = null;
+let cachedModulesFuse: Fuse<HideoutModule> | null = null;
+let cachedProjectsFuse: Fuse<Project> | null = null;
+let cachedQuestsFuse: Fuse<Quest> | null = null;
+let cachedItemsArray: Item[] | null = null;
+let cachedModulesArray: HideoutModule[] | null = null;
+let cachedProjectsArray: Project[] | null = null;
+let cachedQuestsArray: Quest[] | null = null;
 
 /**
  * Builds a map of item IDs to their reference details (count and source names)
@@ -39,13 +50,15 @@ export function buildReferenceCount(
   for (const project of projects) {
     for (const phase of project.phases) {
       for (const requirement of phase.requirementItemIds) {
-        const current = referenceMap.get(requirement.itemId) || { 
-          count: 0, 
-          sources: [], 
-          totalQuantity: 0, 
-          quantityBySource: {} 
+        const current = referenceMap.get(requirement.itemId) || {
+          count: 0,
+          sources: [],
+          totalQuantity: 0,
+          quantityBySource: {}
         };
-        const sourceName = `${project.name.en} (${phase.name})`;
+        // Handle phase.name as either string or LocalizedString object
+        const phaseName = typeof phase.name === 'string' ? phase.name : phase.name.en;
+        const sourceName = `${project.name.en} (${phaseName})`;
 
         referenceMap.set(requirement.itemId, {
           count: current.count + 1,
@@ -97,35 +110,74 @@ export function findItemsRequiredBySource(
   quests: Quest[],
   searchQuery: string
 ): Set<string> {
-  const lowerQuery = searchQuery.toLowerCase();
   const itemIds = new Set<string>();
 
-  // Search hideout modules
-  for (const module of hideoutModules) {
-    if (module.name.en.toLowerCase().includes(lowerQuery)) {
-      for (const level of module.levels) {
-        for (const requirement of level.requirementItemIds) {
-          itemIds.add(requirement.itemId);
-        }
+  // Configure Fuse options for fuzzy searching
+  const fuseOptions = {
+    keys: ['name.en'],
+    threshold: 0.4,
+    includeScore: true
+  };
+
+  // Search hideout modules (use cached Fuse instance if available)
+  if (cachedModulesArray !== hideoutModules) {
+    cachedModulesFuse = new Fuse(hideoutModules, fuseOptions);
+    cachedModulesArray = hideoutModules;
+  }
+  const moduleResults = cachedModulesFuse!.search(searchQuery);
+
+  for (const result of moduleResults) {
+    for (const level of result.item.levels) {
+      for (const requirement of level.requirementItemIds) {
+        itemIds.add(requirement.itemId);
       }
     }
   }
 
-  // Search projects
-  for (const project of projects) {
-    if (project.name.en.toLowerCase().includes(lowerQuery)) {
-      for (const phase of project.phases) {
-        for (const requirement of phase.requirementItemIds) {
-          itemIds.add(requirement.itemId);
-        }
+  // Search projects (use cached Fuse instance if available)
+  if (cachedProjectsArray !== projects) {
+    cachedProjectsFuse = new Fuse(projects, fuseOptions);
+    cachedProjectsArray = projects;
+  }
+  const projectResults = cachedProjectsFuse!.search(searchQuery);
+
+  for (const result of projectResults) {
+    for (const phase of result.item.phases) {
+      for (const requirement of phase.requirementItemIds) {
+        itemIds.add(requirement.itemId);
       }
     }
   }
 
-  // Search quests (for quest requirements)
-  for (const quest of quests) {
-    if (quest.name.en.toLowerCase().includes(lowerQuery) && quest.requiredItemIds) {
-      for (const requirement of quest.requiredItemIds) {
+  // Also search phase names within projects (optimized: single Fuse instance)
+  const allPhases = projects.flatMap(project =>
+    project.phases.map(phase => ({
+      name: { en: typeof phase.name === 'string' ? phase.name : phase.name.en },
+      requirementItemIds: phase.requirementItemIds
+    }))
+  );
+
+  if (allPhases.length > 0) {
+    const phaseFuse = new Fuse(allPhases, fuseOptions);
+    const phaseResults = phaseFuse.search(searchQuery);
+
+    for (const result of phaseResults) {
+      for (const requirement of result.item.requirementItemIds) {
+        itemIds.add(requirement.itemId);
+      }
+    }
+  }
+
+  // Search quests (use cached Fuse instance if available)
+  if (cachedQuestsArray !== quests) {
+    cachedQuestsFuse = new Fuse(quests, fuseOptions);
+    cachedQuestsArray = quests;
+  }
+  const questResults = cachedQuestsFuse!.search(searchQuery);
+
+  for (const result of questResults) {
+    if (result.item.requiredItemIds) {
+      for (const requirement of result.item.requiredItemIds) {
         itemIds.add(requirement.itemId);
       }
     }
@@ -135,43 +187,53 @@ export function findItemsRequiredBySource(
 }
 
 /**
- * Filters items by name or by module/project/quest requirements (case-insensitive)
+ * Filters items by name or by module/project/quest requirements using fuzzy search
  * Items matching by name appear first, then items matching by module/project/quest
  */
 export function filterItemsByName(
-  items: any[],
+  items: Item[],
   searchQuery: string,
   hideoutModules?: HideoutModule[],
   projects?: Project[],
   quests?: Quest[]
-) {
+): Item[] {
   if (!searchQuery.trim()) {
     return items;
   }
 
-  const lowerQuery = searchQuery.toLowerCase();
-
-  // First, check if search matches any module/project/quest
-  let requiredItemIds = new Set<string>();
-  if (hideoutModules && projects && quests) {
-    requiredItemIds = findItemsRequiredBySource(hideoutModules, projects, quests, searchQuery);
+  // Configure Fuse for item name search (use cached instance if available)
+  if (cachedItemsArray !== items) {
+    cachedItemsFuse = new Fuse(items, {
+      keys: ['name.en', 'description.en'],
+      threshold: 0.4,
+      includeScore: true,
+      shouldSort: true
+    });
+    cachedItemsArray = items;
   }
 
-  // Filter and categorize items
-  const nameMatches: any[] = [];
-  const sourceMatches: any[] = [];
+  // Perform fuzzy search on item names
+  const fuzzyResults = cachedItemsFuse!.search(searchQuery);
+  const nameMatches = fuzzyResults.map(result => result.item);
 
-  items.forEach(item => {
-    const matchesName = item.name.en.toLowerCase().includes(lowerQuery);
-    const isRequiredBySource = requiredItemIds.has(item.id);
+  // Get item IDs that match by being required by modules/projects/quests
+  let sourceMatchIds = new Set<string>();
+  if (hideoutModules && projects && quests) {
+    sourceMatchIds = findItemsRequiredBySource(hideoutModules, projects, quests, searchQuery);
+  }
 
-    if (matchesName) {
-      nameMatches.push(item);
-    } else if (isRequiredBySource) {
-      sourceMatches.push(item);
-    }
+  // Get items that match by source but not by name
+  const nameMatchIds = new Set(nameMatches.map(item => item.id));
+  const sourceOnlyMatches = items.filter(
+    item => sourceMatchIds.has(item.id) && !nameMatchIds.has(item.id)
+  );
+
+  // Combine and ensure final deduplication (in case source data has duplicates)
+  const combinedResults = [...nameMatches, ...sourceOnlyMatches];
+  const finalSeenIds = new Set<string>();
+  return combinedResults.filter(item => {
+    if (finalSeenIds.has(item.id)) return false;
+    finalSeenIds.add(item.id);
+    return true;
   });
-
-  // Return name matches first, then source matches
-  return [...nameMatches, ...sourceMatches];
 }

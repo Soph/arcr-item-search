@@ -1,0 +1,21 @@
+{
+  "name": "Arc Raiders Item Search",
+  "short_name": "ARCR Items",
+  "description": "Search Arc Raiders items and see their usage in hideout modules, projects, and quests",
+  "start_url": "/arcr-item-search/",
+  "scope": "/arcr-item-search/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#8b5cf6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/arcr-item-search/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "utilities"],
+  "screenshots": []
+}

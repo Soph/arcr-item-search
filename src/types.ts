@@ -22,13 +22,13 @@ export interface LocalizedString {
 export interface Item {
   id: string;
   name: LocalizedString;
-  description: LocalizedString;
+  description?: LocalizedString; // Optional - some items missing this
   type: string;
-  rarity: string;
-  value: number;
-  weightKg: number;
-  stackSize: number;
-  imageFilename: string;
+  rarity?: string; // Optional - some items missing this (including Legendaries!)
+  value?: number; // Optional - many items missing this
+  weightKg?: number; // Optional - many items missing this
+  stackSize?: number; // Optional - 46% of items missing this!
+  imageFilename?: string; // Optional - some items missing this
   updatedAt?: string;
   recyclesInto?: Record<string, number>;
   salvagesInto?: Record<string, number>;
@@ -58,7 +58,7 @@ export interface HideoutModule {
 
 export interface ProjectPhase {
   phase: number;
-  name: string;
+  name: string | LocalizedString; // Can be either string or LocalizedString in actual data
   description?: string;
   requirementItemIds: RequirementItem[];
   requirementCategories?: any[];
@@ -95,4 +95,9 @@ export interface ReferenceDetails {
   sources: string[];
   totalQuantity: number;
   quantityBySource: Record<string, number>;
+}
+
+export interface FilterOptions {
+  rarities: string[];
+  types: string[];
 }

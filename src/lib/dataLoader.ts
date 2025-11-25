@@ -1,9 +1,7 @@
 import type { Item, HideoutModule, Project, Quest } from '../types';
 
-const BASE_URL = 'https://raw.githubusercontent.com/RaidTheory/arcraiders-data/main';
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
-const MAX_RETRIES = 3;
-const RETRY_DELAY_BASE = 1000; // 1 second
+// Use local aggregated data (built by scripts/aggregate-data.js)
+const BASE_URL = import.meta.env.BASE_URL + 'data';
 
 // Type guards for runtime validation
 function isLocalizedString(value: unknown): boolean {
@@ -100,7 +98,6 @@ function validateQuest(quest: unknown): quest is Quest {
   const baseValid = (
     typeof obj.id === 'string' &&
     isLocalizedString(obj.name) &&
-    isLocalizedString(obj.description) &&
     typeof obj.trader === 'string' &&
     Array.isArray(obj.objectives) &&
     obj.objectives.every(isLocalizedString) &&
@@ -117,89 +114,16 @@ function validateQuest(quest: unknown): quest is Quest {
   return baseValid;
 }
 
-// Cache management
-interface CachedData<T> {
-  data: T;
-  timestamp: number;
-}
-
-function getCachedData<T>(key: string): T | null {
-  try {
-    const cached = sessionStorage.getItem(key);
-    if (!cached) return null;
-
-    const { data, timestamp }: CachedData<T> = JSON.parse(cached);
-    if (Date.now() - timestamp > CACHE_DURATION) {
-      sessionStorage.removeItem(key);
-      return null;
-    }
-
-    return data;
-  } catch {
-    return null;
+async function fetchJson<T>(url: string): Promise<T> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
   }
-}
-
-function setCachedData<T>(key: string, data: T): void {
-  try {
-    const cacheEntry: CachedData<T> = {
-      data,
-      timestamp: Date.now()
-    };
-    sessionStorage.setItem(key, JSON.stringify(cacheEntry));
-  } catch (error) {
-    // Silently fail if sessionStorage is full or unavailable
-    console.warn('Failed to cache data:', error);
-  }
-}
-
-// Retry logic with exponential backoff
-async function fetchWithRetry(
-  url: string,
-  retries = MAX_RETRIES
-): Promise<Response> {
-  let lastError: Error | null = null;
-
-  for (let attempt = 0; attempt < retries; attempt++) {
-    try {
-      const response = await fetch(url);
-      if (response.ok) return response;
-
-      // Don't retry on 4xx errors (client errors)
-      if (response.status >= 400 && response.status < 500) {
-        throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
-      }
-
-      // For 5xx errors, retry with backoff
-      lastError = new Error(`Server error ${response.status}: ${response.statusText}`);
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-
-      // If it's a 4xx error (from our throw above), don't retry
-      if (err.message.includes('Failed to fetch') && err.message.includes(url)) {
-        throw err;
-      }
-
-      lastError = err;
-    }
-
-    // Wait before retrying (exponential backoff)
-    if (attempt < retries - 1) {
-      const delay = RETRY_DELAY_BASE * Math.pow(2, attempt);
-      await new Promise(resolve => setTimeout(resolve, delay));
-    }
-  }
-
-  throw lastError || new Error(`Failed to fetch ${url} after ${retries} attempts`);
+  return response.json();
 }
 
 export async function fetchItems(): Promise<Item[]> {
-  const cacheKey = 'arcr-items';
-  const cached = getCachedData<Item[]>(cacheKey);
-  if (cached) return cached;
-
-  const response = await fetchWithRetry(`${BASE_URL}/items.json`);
-  const data: unknown = await response.json();
+  const data: unknown = await fetchJson(`${BASE_URL}/items.json`);
 
   if (!Array.isArray(data)) {
     throw new Error('Invalid items data: expected an array');
@@ -228,17 +152,11 @@ export async function fetchItems(): Promise<Item[]> {
     return true;
   });
 
-  setCachedData(cacheKey, deduplicatedItems);
   return deduplicatedItems;
 }
 
 export async function fetchHideoutModules(): Promise<HideoutModule[]> {
-  const cacheKey = 'arcr-hideout-modules';
-  const cached = getCachedData<HideoutModule[]>(cacheKey);
-  if (cached) return cached;
-
-  const response = await fetchWithRetry(`${BASE_URL}/hideoutModules.json`);
-  const data: unknown = await response.json();
+  const data: unknown = await fetchJson(`${BASE_URL}/hideoutModules.json`);
 
   if (!Array.isArray(data)) {
     throw new Error('Invalid hideout modules data: expected an array');
@@ -256,17 +174,11 @@ export async function fetchHideoutModules(): Promise<HideoutModule[]> {
     throw new Error('No valid hideout modules found in response');
   }
 
-  setCachedData(cacheKey, validModules);
   return validModules;
 }
 
 export async function fetchProjects(): Promise<Project[]> {
-  const cacheKey = 'arcr-projects';
-  const cached = getCachedData<Project[]>(cacheKey);
-  if (cached) return cached;
-
-  const response = await fetchWithRetry(`${BASE_URL}/projects.json`);
-  const data: unknown = await response.json();
+  const data: unknown = await fetchJson(`${BASE_URL}/projects.json`);
 
   if (!Array.isArray(data)) {
     throw new Error('Invalid projects data: expected an array');
@@ -284,17 +196,11 @@ export async function fetchProjects(): Promise<Project[]> {
     throw new Error('No valid projects found in response');
   }
 
-  setCachedData(cacheKey, validProjects);
   return validProjects;
 }
 
 export async function fetchQuests(): Promise<Quest[]> {
-  const cacheKey = 'arcr-quests';
-  const cached = getCachedData<Quest[]>(cacheKey);
-  if (cached) return cached;
-
-  const response = await fetchWithRetry(`${BASE_URL}/quests.json`);
-  const data: unknown = await response.json();
+  const data: unknown = await fetchJson(`${BASE_URL}/quests.json`);
 
   if (!Array.isArray(data)) {
     throw new Error('Invalid quests data: expected an array');
@@ -312,7 +218,6 @@ export async function fetchQuests(): Promise<Quest[]> {
     throw new Error('No valid quests found in response');
   }
 
-  setCachedData(cacheKey, validQuests);
   return validQuests;
 }
 

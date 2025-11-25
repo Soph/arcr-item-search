@@ -32,6 +32,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Fetch game data
+        run: npm run fetch-data
+
       - name: Build
         run: npm run build
 

@@ -23,3 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 .claude
+
+# Generated data files (fetched during build)
+public/data/
+.tmp-arcraiders-data/
